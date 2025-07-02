@@ -91,7 +91,6 @@ def install(url: str, install_dir: str):
                 # too old version of Python.
                 tar.extract(member, path=install_dir)
     logging.info(f'Extracted to {install_dir}')
-    os.unlink(file.name)
 
 
 def write_variables(install_dir: str, output_file: Optional[str], env_file: Optional[str]):
