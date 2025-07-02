@@ -38,7 +38,7 @@ runs:
     - name: Install WASI SDK
       id: install
       shell: bash
-      run: ${{ github.action_path }}/install.py -v
+      run: $GITHUB_ACTION_PATH/install.py -v
       env:
         INPUT_VERSION: ${{ inputs.version }}
         INPUT_INSTALL_PATH: ${{ inputs.install-path }}
