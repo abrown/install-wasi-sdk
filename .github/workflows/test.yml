@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test-basic:
+  test:
     name: Test
     runs-on: ${{ matrix.os }}
     strategy:
@@ -32,15 +32,16 @@ jobs:
         shell: bash
         run:
           |
-          echo "WASI SDK Path: ${{ steps.wasi-sdk.outputs.wasi-sdk-path }}"
-          echo "WASI SDK Version: ${{ steps.wasi-sdk.outputs.wasi-sdk-version }}"
-          echo "Clang Path: ${{ steps.wasi-sdk.outputs.clang-path }}"
-          echo "Sysroot Path: ${{ steps.wasi-sdk.outputs.sysroot-path }}"
+          echo "wasi-sdk-path: ${{ steps.wasi-sdk.outputs.wasi-sdk-path }}"
+          echo "wasi-sdk-version: ${{ steps.wasi-sdk.outputs.wasi-sdk-version }}"
+          echo "clang-path: ${{ steps.wasi-sdk.outputs.clang-path }}"
+          echo "sysroot-path: ${{ steps.wasi-sdk.outputs.sysroot-path }}"
 
       # This should print a wasi-sdk version because `add-to-path` is true by default.
       - name: Check Clang version
         run: clang --version
 
+      # These should be set because `add-to-path` is true by default.
       - name: Check environment variables
         shell: bash
         run: |
