@@ -46,6 +46,7 @@ jobs:
           echo "CXX: $CXX"
 
       - name: Create test C program
+        shell: bash
         run:
           |
           cat > hello.c << 'EOF'
@@ -58,6 +59,7 @@ jobs:
           EOF
 
       - name: Build WebAssembly module
+        shell: bash
         run:
           |
           clang hello.c -o hello.wasm
