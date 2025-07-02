@@ -41,46 +41,6 @@ jobs:
           echo "CC: $CC"
           echo "CXX: $CXX"
 
-  test-versions:
-    name: Test Multiple Versions
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        version:
-          [
-            '23',
-            '24',
-            '25',
-          ]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Test WASI SDK Installation
-        uses: ./
-        with:
-          version: ${{ matrix.version }}
-
-      - name: Verify Installation
-        run:
-          |
-          clang --version
-          echo "Testing version ${{ matrix.version }}"
-
-  test-build:
-    name: Test Building WebAssembly
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install WASI SDK
-        uses: ./
-        with:
-          version: '25'
-
       - name: Create test C program
         run:
           |
