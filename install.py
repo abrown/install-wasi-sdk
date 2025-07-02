@@ -75,7 +75,7 @@ def install(url: str, install_dir: str):
     Download the file from the given URL and extract it to a directory.
     """
     logging.info(f'Downloading {url}')
-    file = tempfile.NamedTemporaryFile(delete_on_close=False)
+    file = tempfile.NamedTemporaryFile(delete=False)
     request.urlretrieve(url, file.name)
     logging.info(f'Successfully downloaded {file.name}')
     os.makedirs(install_dir, exist_ok=True)
@@ -87,6 +87,7 @@ def install(url: str, install_dir: str):
                 member.name = '/'.join(parts[1:])
                 tar.extract(member, path=install_dir, filter='tar')
     logging.info(f'Extracted to {install_dir}')
+    os.unlink(file.name)
 
 
 def write_variables(install_dir: str, output_file: Optional[str], env_file: Optional[str]):
