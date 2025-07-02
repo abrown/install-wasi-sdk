@@ -159,7 +159,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '--install-dir', help='The directory to install to; defaults to the current directory', default='.')
     parser.add_argument(
-        '--add-to-path', help='Write the installed binary directory to GitHub\'s path file (e.g., `$GITHUB_PATH`).', default=False)
+        '--add-to-path', help='Write the installed binary directory to GitHub\'s path file (e.g., \
+            `$GITHUB_PATH`).', default=False, action='store_true')
     parser.add_argument(
         '-v', '--verbose', help='Increase the logging level.', action='count', default=0)
     parser.add_argument(

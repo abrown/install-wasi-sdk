@@ -41,4 +41,5 @@ runs:
       run: |
         $GITHUB_ACTION_PATH/install.py -v \
           --version '${{ inputs.version}}' \
-          --install-dir '${{ inputs.install-path }}'
+          --install-dir '${{ inputs.install-path }}' \
+           ${{ inputs.add-to-path == 'true' && format('--add-to-path') }}
