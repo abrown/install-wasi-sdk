@@ -140,6 +140,7 @@ def write_github_output(install_dir: str, version: str, clang_path: str, sysroot
 
 
 def main(version: str, install_dir: str, add_to_path: bool):
+    install_dir = os.path.abspath(install_dir)
     version, tag = calculate_version_and_tag(version)
     url = calculate_artifact_url(
         version, tag, platform.machine(), platform.system())
