@@ -87,7 +87,9 @@ def install(url: str, install_dir: str):
             parts = member.name.split('/')
             if len(parts) > 1:
                 member.name = '/'.join(parts[1:])
-                tar.extract(member, path=install_dir, filter='tar')
+                # Eventually we will want to pass `filter='tar'` here, but Windows runners have a
+                # too old version of Python.
+                tar.extract(member, path=install_dir)
     logging.info(f'Extracted to {install_dir}')
     os.unlink(file.name)
 
