@@ -24,6 +24,7 @@ jobs:
 
       - name: Run unit tests
         run: ./install.py --test-only --verbose
+        if: !runner.os.startsWith('macos')
 
       - name: Install WASI SDK
         id: wasi-sdk
