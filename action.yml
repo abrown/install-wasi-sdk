@@ -35,21 +35,10 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Check platform
-      shell: bash
-      run:
-        |
-        if [[ "$RUNNER_OS" != "Linux" ]]; then
-          echo "::notice::WASI SDK only needs to be installed on Linux runners since WebAssembly output is cross-platform"
-          echo "::notice::Consider using 'runs-on: ubuntu-latest' for this job"
-          echo "::error::This action only supports Linux runners. WebAssembly compiled with WASI SDK is cross-platform."
-          exit 1
-        fi
-
     - name: Install WASI SDK
       id: install
       shell: bash
-      run: ${{ github.action_path }}/install.sh
+      run: ${{ github.action_path }}/install.py
       env:
         INPUT_VERSION: ${{ inputs.version }}
         INPUT_INSTALL_PATH: ${{ inputs.install-path }}
