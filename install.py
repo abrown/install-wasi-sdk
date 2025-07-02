@@ -93,8 +93,15 @@ def install(url: str, install_dir: str):
                 tar.extract(member, path=install_dir)
     logging.info(f'Extracted to {install_dir}')
 
+
+def verify(install_dir: str, os: str) -> tuple[str, str]:
+    """
+    Verify that WASI SDK was installed correctly by checking for the `clang` executable and the
+    sysroot directory.
+    """
     sep = os.path.sep
-    clang_path = f'{install_dir}{sep}bin{sep}clang'
+    ext = '.exe' if os == 'Windows' else ''
+    clang_path = f'{install_dir}{sep}bin{sep}clang{ext}'
     logging.info(f'Clang executable: {clang_path}')
     assert os.path.isfile(clang_path), f'clang not found at {clang_path}'
 
@@ -144,7 +151,10 @@ def main(version: str, install_dir: str, add_to_path: bool):
     version, tag = calculate_version_and_tag(version)
     url = calculate_artifact_url(
         version, tag, platform.machine(), platform.system())
-    clang_path, sysroot_path = install(url, install_dir)
+
+    install(url, install_dir)
+    clang_path, sysroot_path = verify(install_dir, platform.system())
+
     if add_to_path:
         write_github_path(install_dir, version, clang_path, sysroot_path)
     if 'GITHUB_OUTPUT' in os.environ:
