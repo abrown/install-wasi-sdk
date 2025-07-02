@@ -12,7 +12,7 @@ inputs:
   install-path:
     description: 'Directory to install WASI SDK to'
     required: false
-    default: '/opt/wasi-sdk'
+    default: ${{ runner.tool_cache }}/wasi-sdk
   add-to-path:
     description: 'Add WASI SDK bin directory to PATH'
     required: false

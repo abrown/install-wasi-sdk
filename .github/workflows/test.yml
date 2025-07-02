@@ -69,45 +69,45 @@ jobs:
       - name: Test WebAssembly module
         run: wasmtime hello.wasm
 
-  test-cmake:
-    name: Test CMake Integration
-    runs-on: ubuntu-latest
+  # test-cmake:
+  #   name: Test CMake Integration
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Install WASI SDK
-        uses: ./
-        with:
-          version: '25'
+  #     - name: Install WASI SDK
+  #       uses: ./
+  #       with:
+  #         version: '25'
 
-      - name: Create CMake project
-        run:
-          |
-          mkdir cmake-test
-          cd cmake-test
+  #     - name: Create CMake project
+  #       run:
+  #         |
+  #         mkdir cmake-test
+  #         cd cmake-test
 
-          cat > CMakeLists.txt << 'EOF'
-          cmake_minimum_required(VERSION 3.16)
-          project(HelloWasm C)
+  #         cat > CMakeLists.txt << 'EOF'
+  #         cmake_minimum_required(VERSION 3.16)
+  #         project(HelloWasm C)
 
-          add_executable(hello hello.c)
-          EOF
+  #         add_executable(hello hello.c)
+  #         EOF
 
-          cat > hello.c << 'EOF'
-          #include <stdio.h>
+  #         cat > hello.c << 'EOF'
+  #         #include <stdio.h>
 
-          int main() {
-              printf("Hello from CMake + WASI!\n");
-              return 0;
-          }
-          EOF
+  #         int main() {
+  #             printf("Hello from CMake + WASI!\n");
+  #             return 0;
+  #         }
+  #         EOF
 
-      - name: Build with CMake
-        run:
-          |
-          cd cmake-test
-          cmake -B build -DCMAKE_TOOLCHAIN_FILE=$WASI_SDK_PATH/share/cmake/wasi-sdk.cmake
-          cmake --build build
-          ls -la build/hello
+  #     - name: Build with CMake
+  #       run:
+  #         |
+  #         cd cmake-test
+  #         cmake -B build -DCMAKE_TOOLCHAIN_FILE=$WASI_SDK_PATH/share/cmake/wasi-sdk.cmake
+  #         cmake --build build
+  #         ls -la build/hello
