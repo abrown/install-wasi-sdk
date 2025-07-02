@@ -96,12 +96,12 @@ def install(url: str, install_dir: str):
     sep = os.path.sep
     ext = '.exe' if sep == '\\' else ''
     clang_path = f'{install_dir}{sep}bin{sep}clang{ext}'
-    logging.info(f'Clang executable: {clang_path}')
     assert os.path.isfile(clang_path), f'clang not found at {clang_path}'
+    logging.info(f'Found Clang executable: {clang_path}')
 
     sysroot_path = f'{install_dir}{sep}share{sep}wasi-sysroot'
-    logging.info(f'WASI sysroot: {sysroot_path}')
     assert os.path.isdir(sysroot_path), f'sysroot not found at {sysroot_path}'
+    logging.info(f'Found WASI sysroot: {sysroot_path}')
 
     return clang_path, sysroot_path
 

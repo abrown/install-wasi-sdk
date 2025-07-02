@@ -8,7 +8,7 @@ on:
 
 jobs:
   test-basic:
-    name: Test Basic Installation
+    name: Test
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -28,7 +28,7 @@ jobs:
         with:
           version: ${{ matrix.version }}
 
-      - name: Verify Installation
+      - name: Check output variables
         shell: bash
         run:
           |
@@ -37,10 +37,13 @@ jobs:
           echo "Clang Path: ${{ steps.wasi-sdk.outputs.clang-path }}"
           echo "Sysroot Path: ${{ steps.wasi-sdk.outputs.sysroot-path }}"
 
-          # Test that clang is available
-          clang --version
+      # This should print a wasi-sdk version because `add-to-path` is true by default.
+      - name: Check Clang version
+        run: clang --version
 
-          # Test environment variables
+      - name: Check environment variables
+        shell: bash
+        run: |
           echo "WASI_SDK_PATH: $WASI_SDK_PATH"
           echo "CC: $CC"
           echo "CXX: $CXX"
@@ -72,45 +75,45 @@ jobs:
       - name: Test WebAssembly module
         run: wasmtime hello.wasm
 
-  # test-cmake:
-  #   name: Test CMake Integration
-  #   runs-on: ubuntu-latest
+  test-cmake:
+    name: Test CMake Integration
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  #     - name: Install WASI SDK
-  #       uses: ./
-  #       with:
-  #         version: '25'
+      - name: Install WASI SDK
+        uses: ./
+        with:
+          version: '25'
 
-  #     - name: Create CMake project
-  #       run:
-  #         |
-  #         mkdir cmake-test
-  #         cd cmake-test
+      - name: Create CMake project
+        run:
+          |
+          mkdir cmake-test
+          cd cmake-test
 
-  #         cat > CMakeLists.txt << 'EOF'
-  #         cmake_minimum_required(VERSION 3.16)
-  #         project(HelloWasm C)
+          cat > CMakeLists.txt << 'EOF'
+          cmake_minimum_required(VERSION 3.16)
+          project(HelloWasm C)
 
-  #         add_executable(hello hello.c)
-  #         EOF
+          add_executable(hello hello.c)
+          EOF
 
-  #         cat > hello.c << 'EOF'
-  #         #include <stdio.h>
+          cat > hello.c << 'EOF'
+          #include <stdio.h>
 
-  #         int main() {
-  #             printf("Hello from CMake + WASI!\n");
-  #             return 0;
-  #         }
-  #         EOF
+          int main() {
+              printf("Hello from CMake + WASI!\n");
+              return 0;
+          }
+          EOF
 
-  #     - name: Build with CMake
-  #       run:
-  #         |
-  #         cd cmake-test
-  #         cmake -B build -DCMAKE_TOOLCHAIN_FILE=$WASI_SDK_PATH/share/cmake/wasi-sdk.cmake
-  #         cmake --build build
-  #         ls -la build/hello
+      - name: Build with CMake
+        run:
+          |
+          cd cmake-test
+          cmake -B build -DCMAKE_TOOLCHAIN_FILE=$WASI_SDK_PATH/share/cmake/wasi-sdk.cmake
+          cmake --build build
+          ls -la build/hello
