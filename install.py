@@ -9,6 +9,7 @@ import platform
 import sys
 import tarfile
 import tempfile
+import token
 from typing import Optional
 from urllib import request
 
@@ -21,8 +22,10 @@ def retrieve_latest_tag():
     'wasi-sdk-25'
     """
     url = 'https://api.github.com/repos/WebAssembly/wasi-sdk/releases/latest'
-
-    with request.urlopen(url) as response:
+    req = request.Request(url)
+    if 'GITHUB_TOKEN' in os.environ:
+        req.add_header('Authorization', f'token {os.environ["GITHUB_TOKEN"]}')
+    with request.urlopen(req) as response:
         data = json.loads(response.read().decode('utf-8'))
         return data['tag_name']
 
@@ -155,7 +158,8 @@ if __name__ == "__main__":
         'GITHUB_ENV', args.env_file) if add_to_path else args.env_file
 
     if args.test_only:
-        if doctest.testmod():
+        failures, _ = doctest.testmod()
+        if failures:
             sys.exit(1)
     else:
         main(version, install_dir, output_file, env_file)
