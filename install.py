@@ -9,7 +9,6 @@ import platform
 import sys
 import tarfile
 import tempfile
-import token
 from typing import Optional
 from urllib import request
 
