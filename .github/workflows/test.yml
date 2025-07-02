@@ -61,17 +61,13 @@ jobs:
           |
           clang hello.c -o hello.wasm
           ls -la hello.wasm
+          file hello.wasm
 
       - name: Install Wasmtime
-        run:
-          |
-          curl https://wasmtime.dev/install.sh -sSf | bash
-          echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
+        uses: bytecodealliance/actions/wasmtime/setup@v1.1.0
 
       - name: Test WebAssembly module
-        run:
-          |
-          wasmtime hello.wasm
+        run: wasmtime hello.wasm
 
   test-cmake:
     name: Test CMake Integration
