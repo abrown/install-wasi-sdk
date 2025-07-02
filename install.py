@@ -67,6 +67,8 @@ def calculate_artifact_url(version: str, tag: str, arch: str, os: str):
         os = 'macos'
     else:
         os = os.lower()
+    if arch.lower() == 'amd64':
+        arch = 'x86_64'
     return f'{base}/{tag}/wasi-sdk-{version}-{arch}-{os}.tar.gz'
 
 
