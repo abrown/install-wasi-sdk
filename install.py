@@ -80,6 +80,7 @@ def install(url: str, install_dir: str):
     file = tempfile.NamedTemporaryFile(delete=False)
     request.urlretrieve(url, file.name)
     logging.info(f'Successfully downloaded {file.name}')
+
     os.makedirs(install_dir, exist_ok=True)
     with tarfile.open(file.name, 'r:gz') as tar:
         for member in tar.getmembers():
@@ -88,46 +89,65 @@ def install(url: str, install_dir: str):
             if len(parts) > 1:
                 member.name = '/'.join(parts[1:])
                 # Eventually we will want to pass `filter='tar'` here, but Windows runners have a
-                # too old version of Python.
+                # pre-3.9.17 version of Python.
                 tar.extract(member, path=install_dir)
     logging.info(f'Extracted to {install_dir}')
 
-
-def write_variables(install_dir: str, output_file: Optional[str], env_file: Optional[str]):
-    """
-    Write variables to output files; this is useful to write out data for GitHub Actions.
-    """
-    clang_path = f'{install_dir}/bin/clang'
+    sep = os.path.sep
+    clang_path = f'{install_dir}{sep}bin{sep}clang'
     logging.info(f'Clang executable: {clang_path}')
     assert os.path.isfile(clang_path), f'clang not found at {clang_path}'
 
-    sysroot_path = f'{install_dir}/share/wasi-sysroot'
-    logging.info(f'WASI sysroot: {clang_path}')
+    sysroot_path = f'{install_dir}{sep}share{sep}wasi-sysroot'
+    logging.info(f'WASI sysroot: {sysroot_path}')
     assert os.path.isdir(sysroot_path), f'sysroot not found at {sysroot_path}'
 
-    if output_file:
-        logging.info(f'Writing output variables to {output_file}')
-        with open(output_file, 'a') as f:
-            f.write(f'wasi-sdk-path={install_dir}\n')
-            f.write(f'wasi-sdk-version={version}\n')
-            f.write(f'clang-path={clang_path}\n')
-            f.write(f'sysroot-path={sysroot_path}\n')
-
-    if env_file:
-        logging.info(f'Writing environment variables to {env_file}')
-        with open(env_file, 'a') as f:
-            f.write(f'WASI_SDK_PATH={install_dir}\n')
-            f.write(f'WASI_SDK_VERSION={version}\n')
-            f.write(f'CC={clang_path} --sysroot={sysroot_path}\n')
-            f.write(f'CXX={clang_path}++ --sysroot={sysroot_path}\n')
+    return clang_path, sysroot_path
 
 
-def main(version: str, install_dir: str, output_file: Optional[str], env_file: Optional[str]):
+def write_github_path(install_dir: str, version: str, clang_path: str, sysroot_path: str):
+    """
+    Write the WASI SDK path to the GitHub Actions path file. This also updates the GitHub
+    environment for good measure.
+    """
+    assert 'GITHUB_PATH' in os.environ, "GITHUB_PATH environment variable must be set"
+    path_file = os.environ['GITHUB_PATH']
+    logging.info(f'Writing to GitHub path file {path_file}')
+    with open(path_file, 'a') as f:
+        f.write(os.path.dirname(clang_path))
+
+    env_file = os.environ['GITHUB_ENV']
+    logging.info(f'Writing to GitHub environment file {env_file}')
+    with open(env_file, 'a') as f:
+        f.write(f'WASI_SDK_PATH={install_dir}\n')
+        f.write(f'WASI_SDK_VERSION={version}\n')
+        f.write(f'CC={clang_path} --sysroot={sysroot_path}\n')
+        f.write(f'CXX={clang_path}++ --sysroot={sysroot_path}\n')
+
+
+def write_github_output(install_dir: str, version: str, clang_path: str, sysroot_path: str):
+    """
+    Write the WASI SDK path and version to the GitHub Actions output file.
+    """
+    assert 'GITHUB_OUTPUT' in os.environ, "GITHUB_OUTPUT environment variable must be set"
+    output_file = os.environ['GITHUB_OUTPUT']
+    logging.info(f'Writing to GitHub output file {output_file}')
+    with open(output_file, 'a') as f:
+        f.write(f'wasi-sdk-path={install_dir}\n')
+        f.write(f'wasi-sdk-version={version}\n')
+        f.write(f'clang-path={clang_path}\n')
+        f.write(f'sysroot-path={sysroot_path}\n')
+
+
+def main(version: str, install_dir: str, add_to_path: bool):
     version, tag = calculate_version_and_tag(version)
     url = calculate_artifact_url(
         version, tag, platform.machine(), platform.system())
-    install(url, install_dir)
-    write_variables(install_dir, output_file, env_file)
+    clang_path, sysroot_path = install(url, install_dir)
+    if add_to_path:
+        write_github_path(install_dir, version, clang_path, sysroot_path)
+    if 'GITHUB_OUTPUT' in os.environ:
+        write_github_output(install_dir, version, clang_path, sysroot_path)
 
 
 if __name__ == "__main__":
@@ -138,9 +158,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--install-dir', help='The directory to install to; defaults to the current directory', default='.')
     parser.add_argument(
-        '--output-file', help='Write GitHub action output variables to this .env-like file (e.g., `$GITHUB_PATH`).', default=None)
-    parser.add_argument(
-        '--env-file', help='Write a new wasi-sdk environment to this .env-like file (e.g., `$GITHUB_ENV`).', default=None)
+        '--add-to-path', help='Write the installed binary directory to GitHub\'s path file (e.g., `$GITHUB_PATH`).', default=False)
     parser.add_argument(
         '-v', '--verbose', help='Increase the logging level.', action='count', default=0)
     parser.add_argument(
@@ -152,18 +170,9 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
     logging.getLogger().name = os.path.basename(__file__)
 
-    # Override any CLI arguments using GitHub Action inputs.
-    version = os.getenv('INPUT_VERSION', args.version)
-    install_dir = os.getenv('INPUT_INSTALL_DIR', args.install_dir)
-    add_to_path = os.getenv('INPUT_ADD_TO_PATH', 'false').lower() == 'true'
-    output_file = os.getenv(
-        'GITHUB_PATH', args.output_file) if add_to_path else args.output_file
-    env_file = os.getenv(
-        'GITHUB_ENV', args.env_file) if add_to_path else args.env_file
-
     if args.test_only:
         failures, _ = doctest.testmod()
         if failures:
             sys.exit(1)
     else:
-        main(version, install_dir, output_file, env_file)
+        main(args.version, args.install_dir, args.add_to_path)

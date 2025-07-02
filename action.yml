@@ -42,7 +42,3 @@ runs:
         $GITHUB_ACTION_PATH/install.py -v \
           --version '${{ inputs.version}}' \
           --install-dir '${{ inputs.install-path }}'
-      env:
-        INPUT_VERSION: ${{ inputs.version }}
-        INPUT_INSTALL_PATH: ${{ inputs.install-path }}
-        INPUT_ADD_TO_PATH: ${{ inputs.add-to-path }}
