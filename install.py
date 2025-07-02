@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+# Install a specific version of the WASI SDK. This is primarily intended for cross-platform use
+# within GitHub Actions but can be used locally as well.
+#
+# Usage: install.py --version 25.0 --install-dir /path/to/install
+#
+# See `install.py --help` for more options.
+
+
 import argparse
 import doctest
 import json
@@ -21,6 +29,8 @@ def retrieve_latest_tag():
     """
     url = 'https://api.github.com/repos/WebAssembly/wasi-sdk/releases/latest'
     req = request.Request(url)
+    # Because macos runners share the same IP, they are immediately rate-limited by GitHub.
+    # (https://github.com/actions/runner-images/issues/602).
     if 'GITHUB_TOKEN' in os.environ:
         req.add_header('Authorization', f'Bearer {os.environ["GITHUB_TOKEN"]}')
     with request.urlopen(req) as response:
