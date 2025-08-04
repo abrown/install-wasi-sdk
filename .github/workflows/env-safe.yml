@@ -1,0 +1,60 @@
+# This workflow demonstrates how to use the `install-wasi-sdk` action alongside another toolchain.
+# By default, the `add-to-path` input is set to `true`, overriding the runner `PATH`, `CC`, and
+# other variables. Here we demonstrate using the action outputs along with a step ID to access the
+# installed tools, without modifying the environment.
+
+name: Environment-safe
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  env:
+    name: Example
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: ./
+        id: wasi-sdk
+        with:
+          add-to-path: 'false'
+
+      - name: Check output variables
+        shell: bash
+        run: |
+          echo "wasi-sdk-path: ${{ steps.wasi-sdk.outputs.wasi-sdk-path }}"
+          echo "wasi-sdk-version: ${{ steps.wasi-sdk.outputs.wasi-sdk-version }}"
+          echo "clang-path: ${{ steps.wasi-sdk.outputs.clang-path }}"
+          echo "sysroot-path: ${{ steps.wasi-sdk.outputs.sysroot-path }}"
+
+      - name: Check Clang version
+        run: ${{ steps.wasi-sdk.outputs.clang-path }} --version
+
+      - name: Create test C program
+        shell: bash
+        run: |
+          cat > hello.c << 'EOF'
+          #include <stdio.h>
+
+          int main() {
+              printf("Hello, WebAssembly!\n");
+              return 0;
+          }
+          EOF
+
+      # Note how we must also set the sysroot path manually which would otherwise be set up for us
+      # in the `CC` environment variable.
+      - name: Build WebAssembly module
+        shell: bash
+        run: |
+          ${{ steps.wasi-sdk.outputs.clang-path }} \
+              --sysroot=${{ steps.wasi-sdk.outputs.sysroot-path }} \
+              hello.c -o hello.wasm
+          ls -la hello.wasm
+          file hello.wasm

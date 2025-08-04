@@ -1,0 +1,28 @@
+# This workflow runs the unit tests in the Python script.
+
+name: Unit tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Python version
+        run: python --version
+
+      - name: Run unit tests
+        run: ./install.py --test-only --verbose
+        if: ${{ !startsWith(runner.os, 'macos') }}
