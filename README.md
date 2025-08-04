@@ -1,9 +1,9 @@
 # `install-wasi-sdk`
 
-[![Cross-platform](https://github.com/abrown/install-wasi-sdk/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/abrown/install-wasi-sdk/actions/workflows/test.yml)
+[![Cross-platform](https://github.com/abrown/install-wasi-sdk/actions/workflows/cross-platform.yml/badge.svg?branch=main)](https://github.com/abrown/install-wasi-sdk/actions/workflows/cross-platform.yml)
 [![CMake-compatible](https://github.com/abrown/install-wasi-sdk/actions/workflows/cmake.yml/badge.svg?branch=main)](https://github.com/abrown/install-wasi-sdk/actions/workflows/cmake.yml)
-[![Environment-safe](https://github.com/abrown/install-wasi-sdk/actions/workflows/env.yml/badge.svg?branch=main)](https://github.com/abrown/install-wasi-sdk/actions/workflows/env.yml)
-
+[![Environment-safe](https://github.com/abrown/install-wasi-sdk/actions/workflows/env-safe.yml/badge.svg?branch=main)](https://github.com/abrown/install-wasi-sdk/actions/workflows/env-safe.yml)
+[![Unit tests](https://github.com/abrown/install-wasi-sdk/actions/workflows/unit-tests.yml/badge.svg?branch=main)](https://github.com/abrown/install-wasi-sdk/actions/workflows/unit-tests.yml)
 
 This GitHub Action will install the [WASI SDK] toolchain for compiling to WebAssembly on a GitHub
 runner:
@@ -30,14 +30,15 @@ For more advanced usage, see the following examples:
 
 ### Inputs
 
-| Input          | Description                                | Required | Default                        |
-| -------------- | -------------------------------------------| -------- | ------------------------------ |
-| `version`      | WASI SDK version to install (e.g., `25`)   | No       | `latest`                       |
-| `install-path` | Directory to install WASI SDK to           | No       | `/$RUNNER_TOOL_CACHE/wasi-sdk` |
-| `add-to-path`  | Add WASI SDK `bin` directory to the `PATH` | No       | `true`                         |
+| Input          | Description                                | Required | Default                       |
+| -------------- | -------------------------------------------| -------- | ----------------------------- |
+| `version`      | WASI SDK version to install (e.g., `25`)   | No       | `latest`                      |
+| `install-path` | Directory to install WASI SDK to           | No       | `$RUNNER_TOOL_CACHE/wasi-sdk` |
+| `add-to-path`  | Add WASI SDK `bin` directory to the `PATH` | No       | `true`                        |
 
-See GitHub's [variables reference] for a description of `RUNNER_TOOL_CACHE`; other `setup-*` actions
-store their artifacts here.
+Note that passing `latest` as the `version` will attempt to retrieve the latest [release
+tag][releases]. See GitHub's [variables reference] for a description of `RUNNER_TOOL_CACHE`; other
+`setup-*` actions store their artifacts here.
 
 [variables reference]: https://docs.github.com/en/actions/reference/workflows-and-actions/variables
 
