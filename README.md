@@ -1,236 +1,81 @@
-# Install WASI SDK GitHub Action
+# `install-wasi-sdk`
 
-This is a custom GitHub Action for use in your workflows that will install the [WASI SDK](https://github.com/WebAssembly/wasi-sdk) toolchain for WebAssembly development.
+[![Cross-platform](https://github.com/abrown/install-wasi-sdk/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/abrown/install-wasi-sdk/actions/workflows/test.yml)
+[![CMake-compatible](https://github.com/abrown/install-wasi-sdk/actions/workflows/cmake.yml/badge.svg?branch=main)](https://github.com/abrown/install-wasi-sdk/actions/workflows/cmake.yml)
+[![Environment-safe](https://github.com/abrown/install-wasi-sdk/actions/workflows/env.yml/badge.svg?branch=main)](https://github.com/abrown/install-wasi-sdk/actions/workflows/env.yml)
 
-## Features
 
-- ✅ **Linux-focused**: Runs on Ubuntu/Linux runners (WebAssembly output is cross-platform)
-- ✅ Supports multiple architectures (x86_64, arm64)
-- ✅ Downloads and installs the specified version of WASI SDK
-- ✅ Optionally adds WASI SDK to PATH
-- ✅ Sets up convenient environment variables
-- ✅ Provides output variables for use in subsequent steps
-- ✅ Comprehensive error handling and logging
+This GitHub Action will install the [WASI SDK] toolchain for compiling to WebAssembly on a GitHub
+runner:
+- Downloads and installs the specified version of WASI SDK (see [releases])
+- Optionally adds WASI SDK to the GitHub runner `PATH`
+- Sets up [environment variables] and [output variables]
 
-## Why Linux Only?
+[WASI SDK]: https://github.com/WebAssembly/wasi-sdk
+[releases]: https://github.com/WebAssembly/wasi-sdk/releases
+[environment variables]: #environment-variables
+[output variables]: #output-variables
 
-WASI SDK compiles C/C++ code to WebAssembly, which is completely cross-platform. There's no need to install WASI SDK on multiple platforms - you can compile your WebAssembly modules on Linux and run them anywhere. This approach:
-
-- Simplifies CI/CD pipelines
-- Reduces complexity and potential issues
-- Leverages Linux's excellent toolchain support
-- Produces identical WebAssembly output regardless of build platform
-
-## Usage
-
-### Basic Usage
+### Usage
 
 ```yaml
-- name: Install WASI SDK
-  uses: konsumer/install-wasi-sdk@v1
+- uses: bytecodealliance/install-wasi-sdk@v1
+# Now, use `clang` or `$CC` to compile C/C++ to WebAssembly:
+- run: $CC hello.c -o hello.wasm
 ```
 
-### Advanced Usage
+For more advanced usage, see the following examples:
+- [Use with CMake](.github/workflows/cmake.yml)
+- [Use without overriding environment](.github/workflows/variables.yml)
 
-```yaml
-- name: Install WASI SDK
-  uses: konsumer/install-wasi-sdk@v1
-  with:
-    version: '25'
-    install-path: '/opt/wasi-sdk'
-    add-to-path: 'true'
-```
+### Inputs
 
-### Complete Workflow Example
+| Input          | Description                                | Required | Default                        |
+| -------------- | -------------------------------------------| -------- | ------------------------------ |
+| `version`      | WASI SDK version to install (e.g., `25`)   | No       | `latest`                       |
+| `install-path` | Directory to install WASI SDK to           | No       | `/$RUNNER_TOOL_CACHE/wasi-sdk` |
+| `add-to-path`  | Add WASI SDK `bin` directory to the `PATH` | No       | `true`                         |
 
-```yaml
-name: Build WebAssembly with WASI SDK
+See GitHub's [variables reference] for a description of `RUNNER_TOOL_CACHE`; other `setup-*` actions
+store their artifacts here.
 
-on:
-  push:
-    branches:
-      [
-        main,
-      ]
-  pull_request:
-    branches:
-      [
-        main,
-      ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install WASI SDK
-        uses: konsumer/install-wasi-sdk@v1
-        with:
-          version: '25'
-
-      - name: Build WebAssembly module
-        run:
-          |
-          clang hello.c -o hello.wasm
-          # or using the environment variable
-          $CC hello.c -o hello.wasm
-
-      - name: Test WebAssembly module
-        run:
-          |
-          wasmtime hello.wasm
-```
-
-## Inputs
-
-| Input          | Description                                          | Required | Default         |
-| -------------- | ---------------------------------------------------- | -------- | --------------- |
-| `version`      | WASI SDK version to install (e.g., "25", "24", "23") | No       | `latest`        |
-| `install-path` | Directory to install WASI SDK to                     | No       | `/opt/wasi-sdk` |
-| `add-to-path`  | Add WASI SDK bin directory to PATH                   | No       | `true`          |
+[variables reference]: https://docs.github.com/en/actions/reference/workflows-and-actions/variables
 
 ## Outputs
 
-| Output             | Description                            |
-| ------------------ | -------------------------------------- |
-| `wasi-sdk-path`    | Path to the installed WASI SDK         |
-| `wasi-sdk-version` | Version of WASI SDK that was installed |
-| `clang-path`       | Path to the clang executable           |
-| `sysroot-path`     | Path to the WASI sysroot               |
+| Output             | Description                              |
+| ------------------ | ---------------------------------------- |
+| `wasi-sdk-path`    | Path to the installed WASI SDK toolchain |
+| `wasi-sdk-version` | Version of WASI SDK that was installed   |
+| `clang-path`       | Path to the `clang` executable           |
+| `sysroot-path`     | Path to the WASI `sysroot`               |
 
 ## Environment Variables
 
-When `add-to-path` is `true`, the action sets up the following environment variables:
+When `add-to-path` is `true`, the action adds the WASI SDK `bin` directory to the GitHub runner
+`PATH`. It also sets the following environment variables:
 
 - `WASI_SDK_PATH`: Path to the WASI SDK installation
 - `CC`: Clang compiler with WASI sysroot configured
 - `CXX`: Clang++ compiler with WASI sysroot configured
 
-## Platform Support
+### Platform Support
 
-This action only supports Linux runners, since WebAssembly output is cross-platform:
+This action should be usable on all GitHub runners; open an [issue] if this is not the case.
 
-| OS      | Architecture | Support | Notes                    |
-| ------- | ------------ | ------- | ------------------------ |
-| Linux   | x86_64       | ✅      | Recommended              |
-| Linux   | arm64        | ✅      | Supported                |
-| macOS   | Any          | ❌      | Use Linux runner instead |
-| Windows | Any          | ❌      | Use Linux runner instead |
+[issue]: https://github.com/abrown/install-wasi-sdk/issues
 
-**Recommendation**: Use `runs-on: ubuntu-latest` for your workflows that need WASI SDK.
+| OS      | Architecture | Support |
+| ------- | ------------ | ------- |
+| Linux   | x86_64       | ✅      |
+| Linux   | arm64        | ✅      |
+| macOS   | Any          | ✅      |
+| Windows | Any          | ✅      |
 
-## Version Support
+### License
 
-- `latest`: Automatically installs the latest available version
-- Specific versions: `25`, `24`, `23`, `22`, etc.
+`install-wasi-sdk` is released under the [Apache License Version 2.0][license]. By contributing to
+the project, you agree to the license and copyright terms therein and release your contribution
+under these terms.
 
-You can find all available versions on the [WASI SDK releases page](https://github.com/WebAssembly/wasi-sdk/releases).
-
-## Examples
-
-### Using Outputs
-
-```yaml
-- name: Install WASI SDK
-  id: wasi-sdk
-  uses: konsumer/install-wasi-sdk@v1
-  with:
-    version: '25'
-
-- name: Show installation details
-  run:
-    |
-    echo "WASI SDK installed at: ${{ steps.wasi-sdk.outputs.wasi-sdk-path }}"
-    echo "WASI SDK version: ${{ steps.wasi-sdk.outputs.wasi-sdk-version }}"
-    echo "Clang path: ${{ steps.wasi-sdk.outputs.clang-path }}"
-    echo "Sysroot path: ${{ steps.wasi-sdk.outputs.sysroot-path }}"
-```
-
-### Building C/C++ for WebAssembly
-
-```yaml
-- name: Install WASI SDK
-  uses: konsumer/install-wasi-sdk@v1
-
-- name: Build C program
-  run:
-    |
-    clang -o program.wasm program.c
-
-- name: Build C++ program
-  run:
-    |
-    clang++ -o program.wasm program.cpp -fno-exceptions
-```
-
-### Using with CMake
-
-```yaml
-- name: Install WASI SDK
-  uses: konsumer/install-wasi-sdk@v1
-  with:
-    version: '25'
-
-- name: Configure CMake
-  run:
-    |
-    cmake -B build \
-      -DCMAKE_TOOLCHAIN_FILE=$WASI_SDK_PATH/share/cmake/wasi-sdk.cmake \
-      -DCMAKE_BUILD_TYPE=Release
-
-- name: Build with CMake
-  run: cmake --build build
-```
-
-### Matrix Build for Multiple Versions
-
-```yaml
-strategy:
-  matrix:
-    wasi-sdk-version:
-      [
-        '23',
-        '24',
-        '25',
-      ]
-
-steps:
-  - name: Install WASI SDK
-    uses: konsumer/install-wasi-sdk@v1
-    with:
-      version: ${{ matrix.wasi-sdk-version }}
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Download fails**: Check if the specified version exists on the [releases page](https://github.com/WebAssembly/wasi-sdk/releases)
-2. **Permission denied**: Make sure the runner has write permissions to the install path
-3. **Platform not supported**: This action only supports Linux runners. Use `runs-on: ubuntu-latest`
-
-### Debug Information
-
-The action provides detailed logging. Check the action logs for:
-
-- Platform detection results
-- Download URLs
-- Installation paths
-- Verification results
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Related Projects
-
-- [WASI SDK](https://github.com/WebAssembly/wasi-sdk) - The official WASI SDK
-- [wasi-libc](https://github.com/WebAssembly/wasi-libc) - WASI libc implementation
-- [Wasmtime](https://github.com/bytecodealliance/wasmtime) - WebAssembly runtime
+[license]: LICENSE

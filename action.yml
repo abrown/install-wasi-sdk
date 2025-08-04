@@ -1,8 +1,5 @@
 name: 'Install WASI SDK'
-description: 'Install the WASI SDK toolchain for WebAssembly development'
-branding:
-  icon: 'download'
-  color: 'blue'
+description: 'Install a WASI SDK toolchain for WebAssembly development'
 
 inputs:
   version:
@@ -40,6 +37,6 @@ runs:
       shell: bash
       run: |
         $GITHUB_ACTION_PATH/install.py -v \
-          --version '${{ inputs.version}}' \
+          --version '${{ inputs.version }}' \
           --install-dir '${{ inputs.install-path }}' \
-          ${{ inputs.add-to-path == 'true' && format('--add-to-path') }}
+          ${{ inputs.add-to-path == 'true' && '--add-to-path' || '' }}

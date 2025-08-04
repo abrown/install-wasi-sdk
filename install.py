@@ -24,8 +24,8 @@ def retrieve_latest_tag():
     """
     Retrieve the tag of a WASI SDK artifact from the latest GitHub releases.
 
-    >>> retrieve_latest_tag()
-    'wasi-sdk-25'
+    >>> retrieve_latest_tag()[:9]
+    'wasi-sdk-'
     """
     url = 'https://api.github.com/repos/WebAssembly/wasi-sdk/releases/latest'
     req = request.Request(url)

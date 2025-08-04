@@ -1,20 +1,21 @@
-name: CI
+# This workflow runs all tests for the `install-wasi-sdk` action.
+
+name: Test
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
-  test:
-    name: Test
+  unit:
+    name: Unit tests
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        version: ['23', '24', '25', 'latest']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,6 +27,18 @@ jobs:
         run: ./install.py --test-only --verbose
         if: ${{ !startsWith(runner.os, 'macos') }}
 
+  cross_platform:
+    name: Cross-platform tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        version: ['23', '24', '25', 'latest']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Install WASI SDK
         id: wasi-sdk
         uses: ./
@@ -34,8 +47,7 @@ jobs:
 
       - name: Check output variables
         shell: bash
-        run:
-          |
+        run: |
           echo "wasi-sdk-path: ${{ steps.wasi-sdk.outputs.wasi-sdk-path }}"
           echo "wasi-sdk-version: ${{ steps.wasi-sdk.outputs.wasi-sdk-version }}"
           echo "clang-path: ${{ steps.wasi-sdk.outputs.clang-path }}"
@@ -55,8 +67,7 @@ jobs:
 
       - name: Create test C program
         shell: bash
-        run:
-          |
+        run: |
           cat > hello.c << 'EOF'
           #include <stdio.h>
 
@@ -68,8 +79,7 @@ jobs:
 
       - name: Build WebAssembly module
         shell: bash
-        run:
-          |
+        run: |
           clang hello.c -o hello.wasm
           ls -la hello.wasm
           file hello.wasm
@@ -79,46 +89,3 @@ jobs:
 
       - name: Test WebAssembly module
         run: wasmtime hello.wasm
-
-  test-cmake:
-    name: Test CMake Integration
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install WASI SDK
-        uses: ./
-        with:
-          version: '25'
-
-      - name: Create CMake project
-        run:
-          |
-          mkdir cmake-test
-          cd cmake-test
-
-          cat > CMakeLists.txt << 'EOF'
-          cmake_minimum_required(VERSION 3.16)
-          project(HelloWasm C)
-
-          add_executable(hello hello.c)
-          EOF
-
-          cat > hello.c << 'EOF'
-          #include <stdio.h>
-
-          int main() {
-              printf("Hello from CMake + WASI!\n");
-              return 0;
-          }
-          EOF
-
-      - name: Build with CMake
-        run:
-          |
-          cd cmake-test
-          cmake -B build -DCMAKE_TOOLCHAIN_FILE=$WASI_SDK_PATH/share/cmake/wasi-sdk.cmake
-          cmake --build build
-          ls -la build/hello
