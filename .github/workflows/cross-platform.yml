@@ -1,0 +1,73 @@
+# This workflow runs the cross-platform tests for the `install-wasi-sdk` action.
+
+name: Cross-platform
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  cross_platform:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        version: ['23', '24', '25', 'latest']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install WASI SDK
+        id: wasi-sdk
+        uses: ./
+        with:
+          version: ${{ matrix.version }}
+
+      - name: Check output variables
+        shell: bash
+        run: |
+          echo "wasi-sdk-path: ${{ steps.wasi-sdk.outputs.wasi-sdk-path }}"
+          echo "wasi-sdk-version: ${{ steps.wasi-sdk.outputs.wasi-sdk-version }}"
+          echo "clang-path: ${{ steps.wasi-sdk.outputs.clang-path }}"
+          echo "sysroot-path: ${{ steps.wasi-sdk.outputs.sysroot-path }}"
+
+      # This should print a wasi-sdk version because `add-to-path` is true by default.
+      - name: Check Clang version
+        run: clang --version
+
+      # These should be set because `add-to-path` is true by default.
+      - name: Check environment variables
+        shell: bash
+        run: |
+          echo "WASI_SDK_PATH: $WASI_SDK_PATH"
+          echo "CC: $CC"
+          echo "CXX: $CXX"
+
+      - name: Create test C program
+        shell: bash
+        run: |
+          cat > hello.c << 'EOF'
+          #include <stdio.h>
+
+          int main() {
+              printf("Hello, WebAssembly!\n");
+              return 0;
+          }
+          EOF
+
+      - name: Build WebAssembly module
+        shell: bash
+        run: |
+          clang hello.c -o hello.wasm
+          ls -la hello.wasm
+          file hello.wasm
+
+      - name: Install Wasmtime
+        uses: bytecodealliance/actions/wasmtime/setup@v1.1.0
+
+      - name: Test WebAssembly module
+        run: wasmtime hello.wasm
